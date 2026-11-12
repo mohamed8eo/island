@@ -340,6 +340,24 @@ ColumnLayout {
 
   SettingsGroup {
     view: page.view
+    title: "Sound"
+    SettingsRow {
+      view: page.view
+      last: true
+      icon: "󰕾"
+      iconTint: page.system.green
+      label: "Allow volume above 100%"
+      detail: "The slider and scroll wheel reach 150% for quiet speakers and headphones"
+      SettingsSwitch {
+        view: page.view
+        checked: !!page.view.settings.volumeBoost
+        onToggled: function(on) { page.view.settings.volumeBoost = on }
+      }
+    }
+  }
+
+  SettingsGroup {
+    view: page.view
     title: "Hide automatically"
     SettingsRow {
       view: page.view
@@ -359,11 +377,23 @@ ColumnLayout {
       iconTint: page.system.green
       label: "When windows are tiled"
       detail: "Hides the island while tiled windows fill the workspace"
-      last: true
       SettingsSwitch {
         view: page.view
         checked: page.view.settings.autoHideTiling
         onToggled: function(on) { page.view.settings.autoHideTiling = on }
+      }
+    }
+    SettingsRow {
+      view: page.view
+      icon: "󰖯"
+      iconTint: page.system.orange
+      label: "When more than one window is open"
+      detail: "Hides the island while the current workspace has two or more windows"
+      last: true
+      SettingsSwitch {
+        view: page.view
+        checked: page.view.settings.autoHideMultipleWindows
+        onToggled: function(on) { page.view.settings.autoHideMultipleWindows = on }
       }
     }
   }
@@ -389,6 +419,17 @@ ColumnLayout {
   SettingsGroup {
     view: page.view
     title: "Appearance"
+    SettingsRow {
+      view: page.view
+      icon: "󰏘"
+      label: "Follow Omarchy theme"
+      detail: "Use the active theme's background, text and colours"
+      SettingsSwitch {
+        view: page.view
+        checked: page.view.settings.followTheme
+        onToggled: function(on) { page.view.settings.followTheme = on }
+      }
+    }
     SettingsRow {
       view: page.view
       icon: "󰸌"

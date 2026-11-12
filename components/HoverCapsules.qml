@@ -159,7 +159,7 @@ Item {
     radius: height / 2
     topLeftRadius: capsules.notch ? 0 : radius
     topRightRadius: capsules.notch ? 0 : radius
-    color: "#000000"
+    color: capsules.theme.background
     opacity: Math.min(1, settled * 3)
     transform: [
       Scale {
@@ -347,7 +347,7 @@ Item {
         width: capsules.capsuleHeight - 18
         height: width
         radius: 5
-        color: "#2a2a2c"
+        color: capsules.theme.tile
         Glyph {
           anchors.horizontalCenter: parent.horizontalCenter
           visible: cover.status !== Image.Ready
@@ -465,7 +465,7 @@ Item {
         onRightClicked: if (controls.sink && controls.sink.audio) controls.sink.audio.muted = !controls.muted
         onScrolled: function(delta) {
           if (!controls.sink || !controls.sink.audio) return
-          controls.sink.audio.volume = Math.max(0, Math.min(1, controls.volume + (delta > 0 ? 0.05 : -0.05)))
+          controls.sink.audio.volume = Math.max(0, Math.min(capsules.host.volumeMax, controls.volume + (delta > 0 ? 0.05 : -0.05)))
         }
       }
       Row {

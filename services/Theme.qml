@@ -2,9 +2,10 @@ import QtQuick
 import Quickshell.Io
 import qs.Commons
 
-// The island's colours, font and motion speed. The island is always black
-// with neutral, macOS-like text and greys; only the accent comes from the
-// Omarchy theme.
+// The island's colours, font and motion speed. By default the island is black
+// with neutral, macOS-like text and greys, and only the accent comes from the
+// Omarchy theme; with `followTheme` it takes the theme's background, text and
+// status colours instead (Settings → General → Appearance).
 Item {
   id: theme
   required property var settings
@@ -38,21 +39,57 @@ Item {
     if (family !== pluginFont || !(size > 0)) return 0
     return size * (-0.0223 + 0.185 * Math.exp(-0.1745 * size))
   }
-  readonly property color background: "#000000"
-  // A neutral near-white rather than the theme's foreground, which is often
-  // tinted (and dark on light themes); every grey below is derived from it.
-  readonly property color text: "#e6e6e6"
-  // Secondary text and glyphs: a neutral grey, as macOS's secondary label,
-  // not the theme's muted colour, which is often tinted and looks dirty
-  // next to the neutral cards. The accent alone carries the theme.
+  // Follow the active Omarchy theme: the island takes the theme's background
+  // and foreground instead of its fixed black-and-neutral look, and its
+  // status colours come from the theme's own palette. Omarchy's Color
+  // singleton is reloaded live when a theme is applied, so these update
+  // without a shell restart. Off by default: the island stays black, with
+  // only the accent from the theme.
+  readonly property bool followTheme: !!settings.followTheme
+  readonly property color background: followTheme ? Color.background : "#000000"
+  // The island's text is a neutral near-white unless it follows the theme,
+  // whose foreground is often tinted (and dark on light themes); every grey
+  // below is derived from it, so following a theme tints them all.
+  readonly property color text: followTheme ? Color.foreground : "#e6e6e6"
+  // Secondary text and glyphs: the text colour at 60%, as macOS's secondary
+  // label. It stays neutral when the island is black, and takes the theme's
+  // tint when following one.
   readonly property color muted: secondary
   readonly property color accent: Color.accent
-  // Apple's dark-mode system colours, for what keeps its meaning whatever
-  // the Omarchy theme: status, colourful live activities, charts.
-  readonly property var system: ({
+  // Status, colourful live activities and charts: Apple's dark-mode system
+  // colours by default, so they keep their meaning whatever the Omarchy
+  // theme, or the theme's palette when following it.
+  readonly property var system: followTheme ? themedSystem : defaultSystem
+  readonly property var defaultSystem: ({
     red: "#ff453a", orange: "#ff9f0a", yellow: "#ffd60a", green: "#30d158", cyan: "#64d2ff",
     blue: "#0a84ff", indigo: "#5e5ce6", purple: "#bf5af2", gray: "#8e8e93"
   })
+  // The theme's palette, mapped onto the island's system roles. Both naming
+  // styles in colors.toml are covered (`red`, `green`, … and `color1`,
+  // `color2`, …), with Omarchy's foundational roles as the last resort.
+  readonly property var themedSystem: ({
+    red: palette.red || palette.color1 || Color.urgent,
+    orange: palette.orange || palette.bright_yellow || palette.yellow || palette.color3 || Color.urgent,
+    yellow: palette.yellow || palette.bright_yellow || palette.color3 || Color.foreground,
+    green: palette.green || palette.bright_green || palette.color2 || Color.accent,
+    cyan: palette.cyan || palette.bright_cyan || palette.color6 || Color.accent,
+    blue: palette.blue || palette.bright_blue || palette.color4 || Color.accent,
+    indigo: palette.magenta || palette.bright_magenta || palette.color5 || Color.accent,
+    purple: palette.bright_magenta || palette.magenta || palette.color5 || Color.accent,
+    gray: palette.muted || palette.color8 || Color.muted
+  })
+  // colors.toml as "key -> #rrggbb", so the theme's palette can be used for
+  // more than the four roles Omarchy's Color exposes.
+  property var palette: ({})
+  function parseColors(raw) {
+    var out = ({})
+    var lines = String(raw || "").split("\n")
+    for (var i = 0; i < lines.length; i++) {
+      var match = lines[i].match(/^\s*([A-Za-z0-9_-]+)\s*=\s*["']?(#[0-9A-Fa-f]{6})/)
+      if (match) out[match[1]] = match[2]
+    }
+    return out
+  }
   readonly property color accentText: contrastOn(Color.accent)
   readonly property color urgent: Color.urgent
   readonly property color surface: card
@@ -123,6 +160,25 @@ Item {
     watchChanges: true
     printErrors: false
     onLoaded: theme.name = text().trim()
+    onFileChanged: reload()
+  }
+  // The theme's colors.toml, re-read whenever Omarchy writes a new
+  // theme.generation (it does at the end of every theme switch), so the
+  // island's palette follows a theme change without a restart.
+  FileView {
+    id: colorsFile
+    path: theme.home + "/.local/state/omarchy/current/theme/colors.toml"
+    watchChanges: false
+    printErrors: false
+    onLoaded: theme.palette = theme.parseColors(text())
+    onLoadFailed: theme.palette = ({})
+  }
+  FileView {
+    id: generationFile
+    path: theme.home + "/.local/state/omarchy/current/theme.generation"
+    watchChanges: true
+    printErrors: false
+    onLoaded: colorsFile.reload()
     onFileChanged: reload()
   }
 }

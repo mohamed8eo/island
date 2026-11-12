@@ -4,8 +4,9 @@ import QtQuick
 // the selected row marked by a soft highlight and an accent bar. With
 // `columns` above 1 it becomes a grid of cells (the selected one highlighted)
 // and ←/→ move across while ↑/↓ move by rows.
-// Keyboard: type to search, ↑/↓ (or Tab, PageUp/PageDown) to move, Enter to
-// choose, Esc to close. Clicking a row chooses it.
+// Keyboard: type to search, ↑/↓ (or Tab, PageUp/PageDown) to move, Ctrl+N /
+// Ctrl+P to move down / up, Enter to choose, Esc to close. Clicking a row
+// chooses it.
 //
 // The owner filters: bind `items` to a list computed from `query`. Rows are
 // drawn by `row`, a component whose root declares `property var entry` and
@@ -94,7 +95,11 @@ Item {
     onKeyPressed: function(event) {
       picker.keyFilter(event)
       if (event.accepted) return
-      if (picker.grid && event.key === Qt.Key_Right) {
+      if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_N) {
+        picker.move(picker.columns); event.accepted = true
+      } else if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_P) {
+        picker.move(-picker.columns); event.accepted = true
+      } else if (picker.grid && event.key === Qt.Key_Right) {
         picker.move(1); event.accepted = true
       } else if (picker.grid && event.key === Qt.Key_Left) {
         picker.move(-1); event.accepted = true

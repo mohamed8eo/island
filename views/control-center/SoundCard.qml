@@ -30,6 +30,7 @@ CcSection {
     detail: card.detail
     visible: galleryPreview || card.controls.controlPresent("sound")
     icon: card.controls.muted || card.controls.volume <= 0 ? "󰖁" : card.controls.volume < 0.34 ? "󰕿" : card.controls.volume < 0.67 ? "󰖀" : "󰕾"
+    max: card.center.host.volumeMax
     value: card.controls.muted ? 0 : card.controls.volume
     onMoved: function(v) {
       card.controls.sink.audio.volume = v

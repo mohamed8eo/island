@@ -62,6 +62,9 @@ Item {
 
   readonly property real volume: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio
     ? Pipewire.defaultAudioSink.audio.volume : -1
+  // How far the volume can go: 150% with overdrive allowed in Settings,
+  // otherwise the usual 100%.
+  readonly property real volumeMax: settings.volumeBoost ? 1.5 : 1
   readonly property bool muted: !!(Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio
     && Pipewire.defaultAudioSink.audio.muted)
   readonly property string wantedOutput: String(barConfig.output || "DP-1")
@@ -238,16 +241,17 @@ Item {
   }
 
   // Auto-hide. The screensaver and fullscreen come live from Wayland and
-  // Quickshell's own tracking; only "floating" lives in Hyprland's client
-  // list, which Quickshell refetches on request. So while Hide on Tiling is
-  // on, a burst of window events asks for it once.
+  // Quickshell's own tracking; the window list and its floating state live in
+  // Hyprland's client list, which Quickshell refetches on request. So while
+  // Hide on Tiling or Hide with Windows is on, a burst of window events asks
+  // for it once.
   readonly property bool screensaverActive: ToplevelManager.toplevels.values
     .some(function(t) { return t.appId === "org.omarchy.screensaver" })
-  readonly property bool autoHideTiling: settings.autoHideTiling
-  onAutoHideTilingChanged: if (autoHideTiling) tilingRefreshTimer.restart()
+  readonly property bool watchesToplevels: settings.autoHideTiling || settings.autoHideMultipleWindows
+  onWatchesToplevelsChanged: if (watchesToplevels) tilingRefreshTimer.restart()
   Connections {
     target: Hyprland
-    enabled: root.autoHideTiling
+    enabled: root.watchesToplevels
     function onRawEvent(event) {
       var n = String((event && event.name) || "")
       if (["changefloatingmode", "openwindow", "closewindow", "movewindowv2"].indexOf(n) >= 0)
@@ -313,7 +317,7 @@ Item {
   onSinkReadyChanged: volumeFeedback()
   Component.onCompleted: {
     initialized = true
-    if (autoHideTiling) tilingRefreshTimer.restart()
+    if (watchesToplevels) tilingRefreshTimer.restart()
   }
 
   // The media service handles the media keys and summons the stock OSD, which
@@ -576,10 +580,26 @@ Item {
           return false
         }
 
+        // More than one window on this workspace: the island steps aside so
+        // the windows keep the top edge, and slides back when the workspace is
+        // down to one window (or none).
+        readonly property int workspaceWindowCount: {
+          var ws = activeWorkspace
+          var tl = ws ? ws.toplevels.values : []
+          var count = 0
+          for (var i = 0; i < tl.length; i++) {
+            var ipc = tl[i].lastIpcObject
+            if (ipc && ipc.mapped !== false && !ipc.hidden) count++
+          }
+          return count
+        }
+        readonly property bool hasMultipleWindows: workspaceWindowCount > 1
+
         readonly property bool autoHideCondition: (
           (root.settings.autoHideFullscreen && hasFullscreen) ||
           hasScreensaver ||
-          (root.settings.autoHideTiling && hasTiled)
+          (root.settings.autoHideTiling && hasTiled) ||
+          (root.settings.autoHideMultipleWindows && hasMultipleWindows)
         )
 
         property bool edgeRevealed: false

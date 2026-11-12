@@ -9,7 +9,10 @@ Item {
   // Overrides the speaker glyph (the brightness preview uses the display one).
   property string icon: ""
   property bool animateLevel: true
-  readonly property real effectiveLevel: muted ? 0 : Math.max(0, Math.min(1, level))
+  readonly property real effectiveLevel: muted ? 0 : Math.max(0, level)
+  // The bar fills at 100%; anything past it is overdrive and only shows in
+  // the percentage (and in orange).
+  readonly property bool overdrive: effectiveLevel > 1
   property real shownLevel: effectiveLevel
   Behavior on shownLevel {
     enabled: volume.animateLevel
@@ -41,10 +44,10 @@ Item {
     radius: height / 2
     color: Qt.tint("#2a2a2a", volume.theme.accentFill("soft"))
     Rectangle {
-      width: parent.width * volume.shownLevel
+      width: parent.width * Math.min(1, volume.shownLevel)
       height: parent.height
       radius: height / 2
-      color: volume.theme.accent
+      color: volume.overdrive ? volume.theme.system.orange : volume.theme.accent
     }
   }
 
@@ -54,9 +57,9 @@ Item {
     anchors.right: parent.right
     anchors.rightMargin: 16
     anchors.verticalCenter: parent.verticalCenter
-    width: 36
+    width: 46
     text: Math.round(volume.effectiveLevel * 100) + "%"
-    color: volume.theme.text
+    color: volume.overdrive ? volume.theme.system.orange : volume.theme.text
     font.family: volume.theme.textFontFamily
     font.letterSpacing: volume.theme.tracking(volume.theme.textFontFamily, volume.theme.size.callout)
     font.pixelSize: volume.theme.size.callout

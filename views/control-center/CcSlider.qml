@@ -11,11 +11,13 @@ Item {
   required property var center
   property string icon: ""
   property real value: 0
+  // The top of the track: sound can go past 100% when overdrive is on.
+  property real max: 1
   signal moved(real value)
-  readonly property real clamped: Math.max(0, Math.min(1, value))
+  readonly property real clamped: Math.max(0, Math.min(max, value))
   // Animate the level only: the island's changing width must not restart
   // the fill animation or make a fixed volume appear to change.
-  property real shownLevel: clamped
+  property real shownLevel: clamped / max
   Behavior on shownLevel {
     enabled: !sliderMouse.pressed
     MotionAnimation { theme: center.host.theme; pace: "quick" }
@@ -51,7 +53,7 @@ Item {
       height: parent.height
       radius: height / 2
       width: height + (parent.width - height) * s.shownLevel
-      color: "#ececec"
+      color: center.host.theme.text
     }
     // The knob, lifted off the fill by a soft shadow.
     Rectangle {
@@ -161,8 +163,8 @@ Item {
     // The control center can scroll: a drag that wanders stays on the slider.
     preventStealing: true
     function apply(x, y) {
-      if (s.vertical) s.moved(Math.max(0, Math.min(1, 1 - y / height)))
-      else s.moved(Math.max(0, Math.min(1, (x - track.height / 2) / (track.width - track.height))))
+      if (s.vertical) s.moved(Math.max(0, Math.min(s.max, s.max * (1 - y / height))))
+      else s.moved(Math.max(0, Math.min(s.max, s.max * (x - track.height / 2) / (track.width - track.height))))
     }
     onPressed: function(e) { apply(e.x, e.y) }
     onPositionChanged: function(e) { if (pressed) apply(e.x, e.y) }
@@ -173,7 +175,7 @@ Item {
         e.accepted = false
         return
       }
-      s.moved(Math.max(0, Math.min(1, s.value + (e.angleDelta.y > 0 ? 0.05 : -0.05))))
+      s.moved(Math.max(0, Math.min(s.max, s.value + (e.angleDelta.y > 0 ? 0.05 : -0.05))))
     }
   }
 }

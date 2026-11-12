@@ -161,7 +161,7 @@ IslandPill {
     Text {
       width: parent.width
       text: pill.activity.status || ""
-      color: "#888888"
+      color: pill.host.theme.muted
       font.family: pill.host.theme.textFontFamily
       font.letterSpacing: pill.host.theme.tracking(pill.host.theme.textFontFamily, pill.host.theme.size.body)
       font.features: { "tnum": 1 }

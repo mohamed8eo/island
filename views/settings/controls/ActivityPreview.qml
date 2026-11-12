@@ -38,7 +38,7 @@ Item {
     height: preview.kind === "bluetooth" ? 52 : 40
     scale: Math.min(1.06, preview.width / width)
     radius: height / 2
-    color: "#000000"
+    color: preview.view.host.theme.background
     border.width: 0
     clip: true
     layer.enabled: visible
@@ -157,7 +157,7 @@ Item {
       spacing: 1
       Text {
         text: "Connected"
-        color: "#888888"
+        color: preview.view.host.theme.muted
         font.family: preview.view.host.theme.textFontFamily
         font.letterSpacing: preview.view.host.theme.tracking(preview.view.host.theme.textFontFamily, preview.view.host.theme.size.footnote)
         font.pixelSize: preview.view.host.theme.size.footnote

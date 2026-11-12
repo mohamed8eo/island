@@ -62,6 +62,9 @@ Item {
       property bool workspaceHud: false
       property bool colorfulSettingsIcons: true
       property bool colorfulLiveActivities: true
+      // Take the island's background, text and status colours from the active
+      // Omarchy theme instead of its own black-and-neutral palette.
+      property bool followTheme: false
       property string textFontMode: "island"
       property string customFont: ""
       property real textScale: 1
@@ -90,6 +93,10 @@ Item {
       property bool reminderControl: false
       property bool autoHideFullscreen: false
       property bool autoHideTiling: false
+      // Hide while the current workspace has more than one window.
+      property bool autoHideMultipleWindows: false
+      // Let the volume slider and scroll wheel go past 100%, to 150%.
+      property bool volumeBoost: false
       property bool menuApps: false
       // Before Ask AI was an addon; carried over and cleared (see Addons.qml).
       property string askAi: ""

@@ -5,7 +5,8 @@ import Quickshell.Io
 // carousel of cards, with the neighbours fading into the island. The selected
 // card stays centered, except that the first and last cards sit flush with
 // the edges. Keyboard: type to filter, ←/→ (or Tab, or the wheel) to move,
-// Enter to apply, Esc to close. Clicking the selected card applies it.
+// Ctrl+N / Ctrl+P to move to the next / previous card, Enter to apply, Esc to
+// close. Clicking the selected card applies it.
 //
 // A switcher provides `items` ([{ key, name, … }], filtered by name),
 // `currentKey` (the active item),
@@ -148,7 +149,11 @@ Item {
     anchors.top: parent.top
     placeholder: picker.placeholder
     onKeyPressed: function(event) {
-      if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || (event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier))) {
+      if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_N) {
+        picker.move(1); event.accepted = true
+      } else if (event.modifiers & Qt.ControlModifier && event.key === Qt.Key_P) {
+        picker.move(-1); event.accepted = true
+      } else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down || (event.key === Qt.Key_Tab && !(event.modifiers & Qt.ShiftModifier))) {
         picker.move(1); event.accepted = true
       } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Up || event.key === Qt.Key_Backtab) {
         picker.move(-1); event.accepted = true

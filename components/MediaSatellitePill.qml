@@ -71,7 +71,7 @@ Rectangle {
     Rectangle {
       anchors.fill: parent
       radius: satellite.radius + 3
-      color: "black"
+      color: satellite.host.theme.background
     }
   }
 
