@@ -465,7 +465,11 @@ Item {
         onRightClicked: if (controls.sink && controls.sink.audio) controls.sink.audio.muted = !controls.muted
         onScrolled: function(delta) {
           if (!controls.sink || !controls.sink.audio) return
-          controls.sink.audio.volume = Math.max(0, Math.min(capsules.host.volumeMax, controls.volume + (delta > 0 ? 0.05 : -0.05)))
+          var next = controls.volume + (delta > 0 ? 0.05 : -0.05)
+          // Crossing 100% lands on it, so one more scroll moves on.
+          if (capsules.host.volumeMax > 1 && ((controls.volume < 1 && next > 1) || (controls.volume > 1 && next < 1)))
+            next = 1
+          controls.sink.audio.volume = Math.max(0, Math.min(capsules.host.volumeMax, next))
         }
       }
       Row {

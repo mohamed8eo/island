@@ -13,6 +13,14 @@ Item {
   property real value: 0
   // The top of the track: sound can go past 100% when overdrive is on.
   property real max: 1
+  // 100% is a detent while overdrive is available: the pointer lands on it
+  // within a few pixels, so it is easy to come back to normal volume.
+  readonly property real detent: 1
+  readonly property real detentZone: {
+    if (max <= 1) return 0
+    var span = vertical ? height : Math.max(0, track.width - track.height)
+    return span > 0 ? max * 8 / span : 0
+  }
   signal moved(real value)
   readonly property real clamped: Math.max(0, Math.min(max, value))
   // Animate the level only: the island's changing width must not restart
@@ -163,8 +171,13 @@ Item {
     // The control center can scroll: a drag that wanders stays on the slider.
     preventStealing: true
     function apply(x, y) {
-      if (s.vertical) s.moved(Math.max(0, Math.min(s.max, s.max * (1 - y / height))))
-      else s.moved(Math.max(0, Math.min(s.max, s.max * (x - track.height / 2) / (track.width - track.height))))
+      var v
+      if (s.vertical) v = s.max * (1 - y / height)
+      else v = s.max * (x - track.height / 2) / (track.width - track.height)
+      v = Math.max(0, Math.min(s.max, v))
+      // A small dead zone at the detent: overdrive is a deliberate step.
+      if (s.detentZone > 0 && Math.abs(v - s.detent) <= s.detentZone) v = s.detent
+      s.moved(v)
     }
     onPressed: function(e) { apply(e.x, e.y) }
     onPositionChanged: function(e) { if (pressed) apply(e.x, e.y) }
@@ -175,7 +188,11 @@ Item {
         e.accepted = false
         return
       }
-      s.moved(Math.max(0, Math.min(s.max, s.value + (e.angleDelta.y > 0 ? 0.05 : -0.05))))
+      var next = s.value + (e.angleDelta.y > 0 ? 0.05 : -0.05)
+      // Crossing the detent lands on it, so one more scroll moves on.
+      if (s.detentZone > 0 && ((s.value < s.detent && next > s.detent) || (s.value > s.detent && next < s.detent)))
+        next = s.detent
+      s.moved(Math.max(0, Math.min(s.max, next)))
     }
   }
 }
