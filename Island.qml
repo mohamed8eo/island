@@ -67,6 +67,52 @@ Item {
   readonly property real volumeMax: settings.volumeBoost ? 1.5 : 1
   readonly property bool muted: !!(Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio
     && Pipewire.defaultAudioSink.audio.muted)
+
+  // The volume keys (bound through companion/bindings.sh) land here, so they
+  // follow the same 150% ceiling and 100% detent as the slider and wheel.
+  property double lastMuteKey: 0
+  function stepVolume(action) {
+    var sink = Pipewire.defaultAudioSink
+    if (!sink || !sink.audio) return ""
+    var audio = sink.audio
+    if (action === "mute-toggle") {
+      // Some keyboards bounce the mute key; the stock script ignores a second
+      // toggle within 250ms too.
+      var now = Date.now()
+      if (now - lastMuteKey < 250) return String(Math.round(audio.volume * 100))
+      lastMuteKey = now
+      audio.muted = !audio.muted
+      return String(Math.round(audio.volume * 100))
+    }
+    var up
+    var amount
+    if (action === "raise") { up = true; amount = 0.05 }
+    else if (action === "lower") { up = false; amount = 0.05 }
+    else {
+      // The precise keys' "+1" / "-1" (see media.lua), one percent each.
+      var precise = /^([+-])([0-9]+)$/.exec(String(action))
+      if (!precise) return ""
+      up = precise[1] === "+"
+      amount = Number(precise[2]) / 100
+    }
+    var before = audio.volume
+    var beforeMuted = audio.muted
+    var next = audio.volume + (up ? amount : -amount)
+    // Crossing 100% lands on it, so one more press moves on.
+    if (volumeMax > 1 && ((audio.volume < 1 && next > 1) || (audio.volume > 1 && next < 1)))
+      next = 1
+    audio.muted = false
+    // Raising stops at the setting's ceiling; lowering always comes back
+    // down, even from a volume a previous overdrive setting left behind.
+    audio.volume = up ? Math.min(volumeMax, next)
+      : Math.max(0, Math.min(Math.max(volumeMax, audio.volume), next))
+    // At the ceiling the level doesn't change, so the sink watcher stays
+    // quiet; show the HUD anyway so the key doesn't look dead.
+    if (settings.volumeHud && audio.volume === before && audio.muted === beforeMuted)
+      showFeedback("", 1800, "volume")
+    return String(Math.round(audio.volume * 100))
+  }
+
   readonly property string wantedOutput: String(barConfig.output || "DP-1")
   // The configured output is connected, so the island stays on it; otherwise
   // it follows the focused monitor.
@@ -503,6 +549,9 @@ Item {
       return root.view
     }
     function toggle(): string { return root.toggleView("controls") }
+    // The volume keys: the island's own step, so overdrive and the 100%
+    // detent apply (see companion/bindings.sh).
+    function volume(action: string): string { return root.stepVolume(action) }
     function themes(): string { return root.toggleView("themes") }
     function wallpapers(): string { return root.toggleView("wallpapers") }
     function apps(): string { return root.toggleView("apps") }

@@ -95,7 +95,8 @@ Item {
       property bool autoHideTiling: false
       // Hide while the current workspace has more than one window.
       property bool autoHideMultipleWindows: false
-      // Let the volume slider and scroll wheel go past 100%, to 150%.
+      // Let the volume slider, scroll wheel and volume keys go past 100%, to
+      // 150%.
       property bool volumeBoost: false
       property bool menuApps: false
       // Before Ask AI was an addon; carried over and cleared (see Addons.qml).

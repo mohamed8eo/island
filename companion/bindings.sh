@@ -133,6 +133,12 @@ write_file() {
     echo "  hl.unbind(keys)"
     echo "  o.bind(keys, description, \"$prefix \" .. command)"
     echo "end"
+    echo "local function volume(keys, description, action)"
+    echo "  hl.unbind(keys)"
+    echo "  o.bind(keys, description,"
+    echo "    \"omarchy-shell guilhermerisu.island volume \" .. action .. \" || omarchy-audio-output-volume \" .. action,"
+    echo "    { locked = true, repeating = action ~= \"mute-toggle\" })"
+    echo "end"
     if [[ -n ${plugin_keys[*]+x} ]]; then
       echo "local function plugin(keys, description, id)"
       echo "  hl.unbind(keys)"
@@ -151,6 +157,14 @@ write_file() {
     for id in "${!plugin_keys[@]}"; do
       printf 'plugin("%s", "%s", "%s")\n' "${plugin_keys[$id]}" "${plugin_names[$id]}" "$id"
     done
+    echo
+    echo "-- Volume and mute keys go through the island, so its HUD and overdrive"
+    echo "-- (150% in Settings) apply; a missing island falls back to Omarchy's script."
+    echo 'volume("XF86AudioRaiseVolume", "Volume up", "raise")'
+    echo 'volume("XF86AudioLowerVolume", "Volume down", "lower")'
+    echo 'volume("XF86AudioMute", "Mute", "mute-toggle")'
+    echo 'volume("ALT + XF86AudioRaiseVolume", "Volume up precise", "+1")'
+    echo 'volume("ALT + XF86AudioLowerVolume", "Volume down precise", "-1")'
     echo
     echo "-- While Settings records a shortcut, the island switches to this submap so"
     echo "-- the keys reach it instead of running their bindings. Its one bind leaves it."

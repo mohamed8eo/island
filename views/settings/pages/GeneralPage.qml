@@ -347,7 +347,7 @@ ColumnLayout {
       icon: "󰕾"
       iconTint: page.system.green
       label: "Allow volume above 100%"
-      detail: "The slider and scroll wheel reach 150% for quiet speakers and headphones"
+      detail: "The slider, scroll wheel and volume keys reach 150% for quiet speakers and headphones"
       SettingsSwitch {
         view: page.view
         checked: !!page.view.settings.volumeBoost
